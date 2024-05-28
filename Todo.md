@@ -1,6 +1,7 @@
 Angular
 - Chores:
   -- Tailwind
+  -- Tailwind prettier
 - Pages:
   -- Login
   -- Register
@@ -17,3 +18,7 @@ Angular
   -- NewtonSoftJson
 - Models:
   -- User
+- Interfaces:
+  -- Crud parent
+  -- Crud child
+  -- Crud single
