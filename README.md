@@ -1,5 +1,5 @@
-# ngnet
-NgNet: Kickstart your full-stack development with a production-ready Angular &amp; ASP.NET foundation.
+# NgNet
+A flexible starter kit to help you start creating scalable robust web apps with Angular and ASP.NET.
 
 ## Todo
 ### Universal
