@@ -11,6 +11,7 @@ NgNet: Kickstart your full-stack development with a production-ready Angular &am
 #### Misc
 - Tailwind
 - Easy UI
+- Dark mode
 #### Page
 - Setup page
 - Dashboard page
