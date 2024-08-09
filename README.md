@@ -6,6 +6,9 @@ NgNet: Kickstart your full-stack development with a production-ready Angular &am
 - CLI start options
   - Easy UI
   - Auth
+    - Also social auth.
+
+- File upload
 
 ### Frontend
 #### Misc
