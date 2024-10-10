@@ -1,4 +1,5 @@
 Angular
+
 - Chores:
   -- Tailwind
   -- Tailwind prettier
@@ -6,8 +7,9 @@ Angular
   -- Login
   -- Register
   -- Configure
-
-.Net
+- Features:
+  -- Markdown displayer
+  .Net
 - Features:
   -- Auth
   -- Configure
@@ -18,6 +20,7 @@ Angular
   -- NewtonSoftJson
 - Models:
   -- User
+  -- Config
 - Interfaces:
   -- Crud parent
   -- Crud child
