@@ -7,7 +7,6 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
-using backend.DTOs.User;
 using backend.Models;
 using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Builder;
@@ -19,6 +18,7 @@ using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using backend.DTOs.User;
 
 namespace backend.Extensions;
 
@@ -30,23 +30,14 @@ public static class IdentityApiEndpointRouteBuilderExtensions
     // Validate the email address using DataAnnotations like the UserValidator does when RequireUniqueEmail = true.
     private static readonly EmailAddressAttribute _emailAddressAttribute = new();
 
-    /// <summary>
-    /// Add endpoints for registering, logging in, and logging out using ASP.NET Core Identity.
-    /// </summary>
-    /// <typeparam name="TUser">The type describing the user. This should match the generic parameter in <see cref="UserManager{TUser}"/>.</typeparam>
-    /// <param name="endpoints">
-    /// The <see cref="IEndpointRouteBuilder"/> to add the identity endpoints to.
-    /// Call <see cref="EndpointRouteBuilderExtensions.MapGroup(IEndpointRouteBuilder, string)"/> to add a prefix to all the endpoints.
-    /// </param>
-    /// <returns>An <see cref="IEndpointConventionBuilder"/> to further customize the added endpoints.</returns>
+    
     public static IEndpointConventionBuilder MapCustomIdentityApi<TUser>(this IEndpointRouteBuilder endpoints)
         where TUser : User, new()
     {
         ArgumentNullException.ThrowIfNull(endpoints);
 
-        var timeProvider = endpoints.ServiceProvider.GetRequiredService<TimeProvider>();
-        var bearerTokenOptions = endpoints.ServiceProvider.GetRequiredService<IOptionsMonitor<BearerTokenOptions>>();
-        //var emailSender = endpoints.ServiceProvider.GetRequiredService<IEmailSender<TUser>>();
+        //var timeProvider = endpoints.ServiceProvider.GetRequiredService<TimeProvider>();
+        var bearerTokenOptions = endpoints.ServiceProvider.GetRequiredService<IOptionsMonitor<BearerTokenOptions>>();        
         var linkGenerator = endpoints.ServiceProvider.GetRequiredService<LinkGenerator>();
 
         // We'll figure out a unique endpoint name based on the final route pattern during endpoint generation.
@@ -56,16 +47,17 @@ public static class IdentityApiEndpointRouteBuilderExtensions
 
         // NOTE: We cannot inject UserManager<TUser> directly because the TUser generic parameter is currently unsupported by RDG.
         // https://github.com/dotnet/aspnetcore/issues/47338
-        routeGroup.MapPost("/register", async Task<Results<Ok, ValidationProblem>>
-            ([FromBody] RegisterDTO registration, HttpContext context, [FromServices] IServiceProvider sp) =>
+       routeGroup.MapPost("/register", async Task<Results<Ok, ValidationProblem>>
+            ([FromBody] CreateUserDTO registration, HttpContext context, [FromServices] IServiceProvider sp) =>
         {
-            var userManager = sp.GetRequiredService<UserManager<TUser>>();
+            var userManager = sp.GetRequiredService<UserManager<User>>();
+            RoleManager<IdentityRole> roleManager = sp.GetRequiredService<RoleManager<IdentityRole>>();
 
             if (!userManager.SupportsUserEmail)
             {
                 throw new NotSupportedException($"{nameof(MapCustomIdentityApi)} requires a user store with email support.");
             }
-
+            
             var userStore = sp.GetRequiredService<IUserStore<TUser>>();
             var emailStore = (IUserEmailStore<TUser>)userStore;
             var email = registration.Email;
@@ -75,26 +67,31 @@ public static class IdentityApiEndpointRouteBuilderExtensions
                 return CreateValidationProblem(IdentityResult.Failed(userManager.ErrorDescriber.InvalidEmail(email)));
             }
 
-            var user = new TUser
+            User user = new User
             {
                 Email = registration.Email,
+                UserName = registration.Email,
                 FirstName = registration.FirstName,
                 LastName = registration.LastName,
-                ProfileImg = registration.ProfileImg,
+                ProfileImg = registration.ProfileImg
+                                         
             };
-            await userStore.SetUserNameAsync(user, email, CancellationToken.None);
-            await emailStore.SetEmailAsync(user, email, CancellationToken.None);
-            user.Active = true;
-            user.EmailConfirmed = true;            
-            var result = await userManager.CreateAsync(user, registration.Password);
 
+
+                        
+            var result = await userManager.CreateAsync(user, registration.Password);
 
             if (!result.Succeeded)
             {
                 return CreateValidationProblem(result);
             }
+            if (!await roleManager.RoleExistsAsync(registration.Role))
+            {
+                await roleManager.CreateAsync(new IdentityRole { Name = registration.Role });
+            }
 
-            await SendConfirmationEmailAsync(user, userManager, context, email);
+            await userManager.AddToRoleAsync(user, registration.Role);
+            
             return TypedResults.Ok();
         });
 
@@ -103,9 +100,9 @@ public static class IdentityApiEndpointRouteBuilderExtensions
         {
             var signInManager = sp.GetRequiredService<SignInManager<TUser>>();
 
-            var useCookieScheme = (useCookies == true) || (useSessionCookies == true);
-            var isPersistent = (useCookies == true) && (useSessionCookies != true);
-            signInManager.AuthenticationScheme = useCookieScheme ? IdentityConstants.ApplicationScheme : IdentityConstants.BearerScheme;
+            var useCookieScheme = false;
+            var isPersistent = false;
+            signInManager.AuthenticationScheme = IdentityConstants.BearerScheme;
 
             var result = await signInManager.PasswordSignInAsync(login.Email, login.Password, isPersistent, lockoutOnFailure: true);
 
@@ -125,7 +122,7 @@ public static class IdentityApiEndpointRouteBuilderExtensions
             {
                 return TypedResults.Problem(result.ToString(), statusCode: StatusCodes.Status401Unauthorized);
             }
-
+            
             // The signInManager already produced the needed response in the form of a cookie or bearer token.
             return TypedResults.Empty;
         });
@@ -136,10 +133,11 @@ public static class IdentityApiEndpointRouteBuilderExtensions
             var signInManager = sp.GetRequiredService<SignInManager<TUser>>();
             var refreshTokenProtector = bearerTokenOptions.Get(IdentityConstants.BearerScheme).RefreshTokenProtector;
             var refreshTicket = refreshTokenProtector.Unprotect(refreshRequest.RefreshToken);
+            var currentTime = DateTime.UtcNow;
 
             // Reject the /refresh attempt with a 401 if the token expired or the security stamp validation fails
             if (refreshTicket?.Properties?.ExpiresUtc is not { } expiresUtc ||
-                timeProvider.GetUtcNow() >= expiresUtc ||
+                currentTime >= expiresUtc ||
                 await signInManager.ValidateSecurityStampAsync(refreshTicket.Principal) is not TUser user)
 
             {
@@ -147,7 +145,8 @@ public static class IdentityApiEndpointRouteBuilderExtensions
             }
 
             var newPrincipal = await signInManager.CreateUserPrincipalAsync(user);
-            return TypedResults.SignIn(newPrincipal, authenticationScheme: IdentityConstants.BearerScheme);
+            return TypedResults.SignIn(newPrincipal);
+
         });
 
         routeGroup.MapGet("/confirmEmail", async Task<Results<ContentHttpResult, UnauthorizedHttpResult>>
@@ -285,14 +284,12 @@ public static class IdentityApiEndpointRouteBuilderExtensions
                     return CreateValidationProblem("CannotResetSharedKeyAndEnable",
                         "Resetting the 2fa shared key must disable 2fa until a 2fa token based on the new shared key is validated.");
                 }
-
-                if (string.IsNullOrEmpty(tfaRequest.TwoFactorCode))
+                else if (string.IsNullOrEmpty(tfaRequest.TwoFactorCode))
                 {
                     return CreateValidationProblem("RequiresTwoFactor",
                         "No 2fa token was provided by the request. A valid 2fa token is required to enable 2fa.");
                 }
-
-                if (!await userManager.VerifyTwoFactorTokenAsync(user, userManager.Options.Tokens.AuthenticatorTokenProvider, tfaRequest.TwoFactorCode))
+                else if (!await userManager.VerifyTwoFactorTokenAsync(user, userManager.Options.Tokens.AuthenticatorTokenProvider, tfaRequest.TwoFactorCode))
                 {
                     return CreateValidationProblem("InvalidTwoFactorCode",
                         "The 2fa token provided by the request was invalid. A valid 2fa token is required to enable 2fa.");
