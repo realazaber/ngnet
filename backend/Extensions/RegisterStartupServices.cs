@@ -1,5 +1,6 @@
 ﻿using backend.Data;
 using backend.Models;
+using backend.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +28,7 @@ namespace backend.Extensions
             builder.Services.AddScoped<UserManager<User>>();    
             builder.Services.AddScoped<SignInManager<User>>();
             builder.Services.AddScoped<RoleManager<IdentityRole>>();
+            builder.Services.AddScoped<FileService>();
 
             builder.Services.AddIdentityCore<User>().AddRoles<IdentityRole>().AddEntityFrameworkStores<AppDbContext>();
            
