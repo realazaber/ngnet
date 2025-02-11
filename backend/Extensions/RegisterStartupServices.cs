@@ -3,7 +3,6 @@ using backend.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace backend.Extensions
 {
@@ -17,15 +16,14 @@ namespace backend.Extensions
             //string connectionString = builder.Configuration.GetConnectionString("DbConnection");
 
             builder.Services.AddDbContext<AppDbContext>(options => options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
-
             
             builder.Services.AddAuthorization();
             builder.Services.AddAuthentication().AddBearerToken(IdentityConstants.BearerScheme);
+            
             builder.Services.AddControllers();            
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             
-
             builder.Services.AddScoped<UserManager<User>>();    
             builder.Services.AddScoped<SignInManager<User>>();
             builder.Services.AddScoped<RoleManager<IdentityRole>>();
@@ -47,10 +45,14 @@ namespace backend.Extensions
             // Add CORS policy
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowLocalhost4200",
-                                       builder => builder.WithOrigins("http://localhost:4200") 
-                                      .AllowAnyHeader()
-                                      .AllowAnyMethod());
+                options.AddPolicy("DevHost",
+                    policy =>
+                    {
+                        policy.WithOrigins("https://localhost:4200")
+                              .AllowAnyHeader()
+                              .AllowAnyMethod()
+                              .AllowCredentials(); // Allow cookies/auth
+                    });
             });
 
             return builder;
