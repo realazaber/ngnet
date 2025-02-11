@@ -48,7 +48,7 @@ public static class IdentityApiEndpointRouteBuilderExtensions
         // NOTE: We cannot inject UserManager<TUser> directly because the TUser generic parameter is currently unsupported by RDG.
         // https://github.com/dotnet/aspnetcore/issues/47338
        routeGroup.MapPost("/register", async Task<Results<Ok, ValidationProblem>>
-            ([FromBody] CreateUserDTO registration, HttpContext context, [FromServices] IServiceProvider sp) =>
+            ([FromBody] RegisterUserDTO registration, HttpContext context, [FromServices] IServiceProvider sp) =>
         {
             var userManager = sp.GetRequiredService<UserManager<User>>();
             RoleManager<IdentityRole> roleManager = sp.GetRequiredService<RoleManager<IdentityRole>>();
@@ -76,8 +76,6 @@ public static class IdentityApiEndpointRouteBuilderExtensions
                 ProfileImg = registration.ProfileImg
                                          
             };
-
-
                         
             var result = await userManager.CreateAsync(user, registration.Password);
 
@@ -85,13 +83,7 @@ public static class IdentityApiEndpointRouteBuilderExtensions
             {
                 return CreateValidationProblem(result);
             }
-            if (!await roleManager.RoleExistsAsync(registration.Role))
-            {
-                await roleManager.CreateAsync(new IdentityRole { Name = registration.Role });
-            }
-
-            await userManager.AddToRoleAsync(user, registration.Role);
-            
+                
             return TypedResults.Ok();
         });
 
