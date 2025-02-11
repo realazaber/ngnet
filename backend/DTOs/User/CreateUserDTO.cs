@@ -6,6 +6,6 @@
         string Email,
         string ProfileImg,
         string Password,
-        string Role
+        string? Role
         );    
 }
