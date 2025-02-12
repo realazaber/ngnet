@@ -1,0 +1,26 @@
+<section>
+  <ngnet-container>
+    <form
+      class="mx-auto shadow-sm flex flex-col gap-y-1 border-[1px] rounded-sm p-3"
+    >
+      <input
+        type="email"
+        name="email"
+        required
+        [(ngModel)]="formData.email"
+        placeholder="Email"
+      /><input
+        type="password"
+        name="password"
+        required
+        [(ngModel)]="formData.password"
+        placeholder="Password"
+      /><input
+        (click)="login()"
+        type="submit"
+        class="btn secondary"
+        value="Login"
+      />
+    </form>
+  </ngnet-container>
+</section>
