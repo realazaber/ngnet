@@ -1,0 +1,25 @@
+<nav class="fixed top-0 left-0 right-0">
+  <div class="flex flex-row justify-between gap-x-2 p-3 w-full">
+    @if (authenticated == false) {
+    <a routerLink="/">Home</a>
+    <div id="auth" class="flex flex-row gap-x-2">
+      <a routerLink="login">Login</a>
+      <a routerLink="register">Register</a>
+    </div>
+    } @if (authenticated == true) {
+    <div class="flex flex-row gap-x-2">
+      <a routerLink="auth/dashboard">Dashboard</a>
+      <a routerLink="auth/profile">Profile</a>
+
+      @if (dmsAccess == true) {
+      <a routerLink="auth/dms">DMS</a>
+      } @if (manageUsers == true) {
+      <div class="flex flex-row gap-x-2">
+        <a routerLink="auth/viewusers">User Manager</a>
+      </div>
+      }
+    </div>
+    <button class="ml-auto" (click)="logout()">Logout</button>
+    }
+  </div>
+</nav>
