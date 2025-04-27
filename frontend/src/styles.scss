@@ -3,4 +3,67 @@
 @tailwind utilities;
 
 @layer components {
+  * {
+    @apply duration-100 selection:bg-secondary selection:text-white;
+  }
+
+  section {
+    @apply w-full;
+    .container {
+      @apply w-4/5 mx-auto flex flex-col;
+
+      h1 {
+        @apply text-3xl font-semibold my-3;
+      }
+
+      h2 {
+        @apply text-2xl font-medium my-2;
+      }
+
+      .btn {
+        @apply py-2 px-4 rounded-sm text-center cursor-pointer;
+      }
+      .primary {
+        @apply bg-primary text-white;
+      }
+
+      .secondary {
+        @apply bg-secondary text-white;
+      }
+
+      .btn-success {
+        @apply bg-green-500 text-white;
+      }
+
+      .btn-warning {
+        @apply bg-yellow-400 text-white;
+      }
+
+      form {
+        .form-group {
+          @apply flex flex-col;
+        }
+
+        input, textarea {
+          @apply border-[1px] shadow-sm px-2 py-3;
+        }
+      }
+
+      hr {
+        @apply my-3 border-2 rounded-full;
+      }
+
+      table {
+        @apply w-full text-left;
+        thead {
+          @apply font-bold;
+        }
+
+        th,
+        td {
+          @apply border-2 py-1 px-3;
+        }
+      }
+    }
+  }
 }
