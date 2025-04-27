@@ -11,10 +11,13 @@ namespace backend.Extensions
         public static WebApplicationBuilder AddCustomServices(this WebApplicationBuilder builder)
         {
 
+            string logsPath = Environment.GetEnvironmentVariable("LOGS_PATH");
+
+            logsPath += "/logs-.txt";
             Log.Logger = new LoggerConfiguration()
                             .MinimumLevel.Information()
                             .WriteTo.Console()
-                            .WriteTo.File("logs/logs-.txt", rollingInterval: RollingInterval.Day)
+                            .WriteTo.File(logsPath, rollingInterval: RollingInterval.Day)
                             .CreateLogger();
                       
             builder.Services.AddScoped<CustomAuthService>();
