@@ -1,4 +1,5 @@
 ﻿using backend.Models;
+using Backend.Extensions;
 using Microsoft.AspNetCore.Identity;
 
 namespace backend.Extensions
@@ -14,7 +15,7 @@ namespace backend.Extensions
 
             if (userManager.Users.Count() < 1)
             {
-                string[] roleNames = { "Admin", "ManageUsers", "CanMakeFiles", "CanMakeFolders" };
+                string[] roleNames = { "Admin", "ManageUsers", "Dms" };
 
                 foreach (var roleName in roleNames)
                 {
@@ -25,7 +26,7 @@ namespace backend.Extensions
                 }
 
                 //Add admin user
-                User user = new User
+                User adminUser = new User
                 {
                     Id = Guid.Empty.ToString(),
                     FirstName = Environment.GetEnvironmentVariable("ADMIN_FIRSTNAME"),
@@ -34,12 +35,25 @@ namespace backend.Extensions
                     UserName = Environment.GetEnvironmentVariable("ADMIN_EMAIL"),
                     ProfileImg = Environment.GetEnvironmentVariable("ADMIN_PROFILEIMG") ?? "",
                 };
+
+                
+
+
                 string password = Environment.GetEnvironmentVariable("ADMIN_PASSWORD");
-                await userManager.CreateAsync(user, password);
-                await userManager.AddToRoleAsync(user, "Admin");
-                await userManager.AddToRoleAsync(user, "ManageUsers");
-                await userManager.AddToRoleAsync(user, "CanMakeFiles");
-                await userManager.AddToRoleAsync(user, "CanMakeFolders");
+                await userManager.CreateAsync(adminUser, password);
+
+
+
+                await userManager.AddToRoleAsync(adminUser, "Admin");
+                await userManager.AddToRoleAsync(adminUser, "ManageUsers");
+                await userManager.AddToRoleAsync(adminUser, "Dms");
+
+                if (Environment.GetEnvironmentVariable("DEMO_MODE") == "ENABLED")
+                {
+                    await AddDemoItems.AddDemoUsers(userManager);
+                }
+
+                
             }
         }
     }
