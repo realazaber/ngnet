@@ -20,14 +20,16 @@ namespace backend.Extensions
             
             builder.Services.AddAuthorization();
             builder.Services.AddAuthentication().AddBearerToken(IdentityConstants.BearerScheme);
-            
-            builder.Services.AddControllers();            
+
+            builder.Services.AddControllers();
+
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             
             builder.Services.AddScoped<UserManager<User>>();    
             builder.Services.AddScoped<SignInManager<User>>();
             builder.Services.AddScoped<RoleManager<IdentityRole>>();
+            builder.Services.AddScoped<FolderService>();
             builder.Services.AddScoped<FileService>();
 
             builder.Services.AddIdentityCore<User>().AddRoles<IdentityRole>().AddEntityFrameworkStores<AppDbContext>();
@@ -50,10 +52,10 @@ namespace backend.Extensions
                 options.AddPolicy("DevHost",
                     policy =>
                     {
-                        policy.WithOrigins("https://localhost:4200")
+                        policy.WithOrigins("https://localhost:4200", "http://localhost:4200")
                               .AllowAnyHeader()
                               .AllowAnyMethod()
-                              .AllowCredentials(); // Allow cookies/auth
+                              .AllowCredentials(); 
                     });
             });
 

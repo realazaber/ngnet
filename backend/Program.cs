@@ -1,25 +1,30 @@
-var builder = WebApplication.CreateBuilder(args);
+using backend.Extensions;
+using backend.Models;
+using backend.Utils;
 
-// Add services to the container.
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
-var app = builder.Build();
+builder.RegisterServices();
+builder.AddCustomServices(); 
+WebApplication app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
+app.UseCors("DevHost");
+app.UseRateLimiter();
+app.UseStaticFiles();
+
+
+app.RegisterMiddleware();
+app.RunStartProcesses();
+
+using (var scope = app.Services.CreateScope())
+{    
+    await SeedUserAndRoles.CreateUserAndRolesAsync(scope.ServiceProvider);
 }
 
-app.UseHttpsRedirection();
+app.MapGroup("api/identity").MapCustomIdentityApi<User>();
 
-app.UseAuthorization();
-
-app.MapControllers();
+string logMessage = "App started at " + DateTime.Now;
+PrintLogger.PrintLog(logMessage, LogLevels.Information);
 
 app.Run();
