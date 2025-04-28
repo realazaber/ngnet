@@ -8,11 +8,9 @@ import { FooterComponent } from './components/footer/footer.component';
   standalone: true,
   imports: [RouterOutlet, NavComponent, FooterComponent],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.scss',
 })
 export class AppComponent {
   title = 'NgNet';
-  backendOnline: boolean = false;
-
+  
   constructor() {}
 }
