@@ -6,7 +6,6 @@ import { SharedModule } from '../../shared/shared.module';
   selector: 'app-home',
   standalone: true,
   imports: [SharedModule, RouterModule],
-  templateUrl: './home.component.html',
-  styleUrl: './home.component.scss',
+  templateUrl: './home.component.html',  
 })
 export class HomePage {}
