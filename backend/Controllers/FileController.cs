@@ -1,70 +1,84 @@
 ﻿using backend.DTOs.File;
-using backend.Models;
+using backend.Models.Files;
 using backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Controllers
 {
-    [Authorize]
-    [Route("api/[controller]")]
+    [Authorize(Roles = "Dms")]
+    [Route("api/files")]
     [ApiController]
     public class FileController : ControllerBase
-    {                       
-        private const string UploadsFolder = "wwwroot/Uploads";
-
+    {
         private readonly FileService _fileService;
+        private readonly FolderService _folderService;
 
-        public FileController(FileService fileService)
-        {                        
-            _fileService = fileService;
-        }
-        
-        [HttpGet]
-        public async Task<IActionResult> GetFile([FromQuery] string filePath)
+        public FileController(FileService fileService, FolderService folderService)
         {
-            if (string.IsNullOrEmpty(filePath))
-                return BadRequest("File path is required.");
+            _fileService = fileService;
+            _folderService = folderService;
+        }
 
-            string fullPath = Path.Combine(UploadsFolder, filePath);
+        [HttpPost("upload")]
+        [DisableRequestSizeLimit]
+        public async Task<IActionResult> UploadFile(IFormFile file, [FromForm] string description, [FromForm] Guid? folderId)
+        {
+            var result = await _fileService.UploadFile(file, User, description, folderId);
+            if (result == null)
+                return BadRequest("File upload failed.");
 
-            if (!System.IO.File.Exists(fullPath))
+            return Ok(result);
+        }
+
+        [HttpPost("upload/multiple")]
+        public async Task<IActionResult> UploadMultipleFiles([FromBody] List<UploadFileDTO> files)
+        {
+            if (files == null || files.Count == 0)
+                return BadRequest("No files provided.");
+
+            var uploadedFiles = new List<FileEntity>();
+            
+
+            foreach (UploadFileDTO file in files)
+            {
+                if (file.FolderId == null)
+                {
+                    var result = await _fileService.UploadFile(file.File, User, file.Description, file.FolderId);
+                    if (result != null)
+                    {
+                        uploadedFiles.Add(result);
+                    }
+                }
+            }
+
+            return Ok(uploadedFiles);
+        }
+
+        [HttpGet("{fileId}")]
+        public async Task<IActionResult> GetFile(Guid fileId)
+        {
+            GetFileDTO fileResult = await _fileService.DownloadFile(fileId.ToString());
+            if (fileResult == null)
                 return NotFound("File not found.");
 
-            GetFileDTO result = await _fileService.GetFile(fullPath);
-            
-            return File(result.fileBytes, result.contentType, Path.GetFileName(result.fullPath));
+            return File(fileResult.fileBytes, fileResult.contentType, fileResult.fileName);
         }
 
-        
-        [HttpPost, DisableRequestSizeLimit]
-        [Consumes("multipart/form-data")]
-
-        public async Task<IActionResult> PostFile(IFormFile file, [FromForm] FileType type)
-        {
-           if (file == null || file.Length == 0)
-           {
-               return BadRequest("No file uploaded.");
-           }
-
-           string uploadsFolderPath = Path.Combine(UploadsFolder);
-
-
-           // Ensure directory exists
-           if (!Directory.Exists(uploadsFolderPath))
-           {
-               Directory.CreateDirectory(uploadsFolderPath);
-           }
-
-            FileEntity fileEntity = await _fileService.UploadFile(file, type, User);
-
-           return Ok(new { Message = "File uploaded successfully", fileEntity });                        
-        }
-
-        [HttpDelete]
-        public async Task<IActionResult> DeleteFile([FromQuery] Guid fileId)
+        [HttpDelete("{fileId}")]
+        public async Task<IActionResult> DeleteFile(Guid fileId)
         {
             return await _fileService.DeleteFile(fileId);
+        }
+
+        [HttpPut("move")]
+        public async Task<IActionResult> MoveFile([FromQuery] Guid fileId, [FromQuery] Guid newFolderId)
+        {
+            var result = await _fileService.MoveFile(fileId, newFolderId, User);
+            if (result == null)
+                return BadRequest("File move failed.");
+
+            return Ok(result);
         }
     }
 }
