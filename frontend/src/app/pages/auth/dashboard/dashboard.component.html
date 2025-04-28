@@ -1,0 +1,9 @@
+<section>
+  <ngnet-container>
+    <h1>Dashboard</h1>
+    @if (currentUser.id) {
+    <app-edituser [userId]="currentUser.id" />
+
+    }
+  </ngnet-container>
+</section>
