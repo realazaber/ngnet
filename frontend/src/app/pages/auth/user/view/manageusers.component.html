@@ -1,0 +1,56 @@
+<section>
+  <ngnet-container>
+    <h1>Manage users</h1>
+    <div class="flex flex-row justify-start gap-x-2 mb-3 ml-auto">
+      <a class="btn primary" routerLink="/auth/createuser">Create User</a>
+      <a class="btn secondary" routerLink="/auth/manageroles">Manage Roles</a>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>
+            <span>Name</span>
+          </th>
+          <th>
+            <span>Email</span>
+          </th>
+          <th>
+            <span>Phone</span>
+          </th>
+          <th>
+            <span>Roles</span>
+          </th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (user of users; track $index) {
+        <tr>
+          <td>
+            <a routerLink="/auth/edituser/{{ user.id }}"
+              ><span>{{ user.firstName }} {{ user.lastName }}</span></a
+            >
+          </td>
+          <td>
+            <span>{{ user.email }}</span>
+          </td>
+          <td>
+            <span>{{ user.phone }}</span>
+          </td>
+          <td>
+            @for (role of user.roles; track $index) {
+            <span class="inline"> {{ role }},</span>
+            }
+          </td>
+          <td>
+            <a routerLink="/auth/edituser/{{ user.id }}"
+              ><button class="btn primary">Edit</button></a
+            >
+          </td>
+        </tr>
+
+        }
+      </tbody>
+    </table>
+  </ngnet-container>
+</section>
