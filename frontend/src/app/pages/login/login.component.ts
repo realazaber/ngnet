@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { SharedModule } from '../../shared/shared.module';
-import { LoginDTO } from '../../models/user/login.dto';
+import { LoginDTO } from '../../models/auth/user/login.dto';
 import { AuthService } from '../../services/auth.service';
 import { TokenDTO } from '../../models/auth/token.dto';
 import { FormsModule } from '@angular/forms';
@@ -10,8 +10,7 @@ import { error } from 'console';
   selector: 'app-login',
   standalone: true,
   imports: [SharedModule, FormsModule, RouterModule],
-  templateUrl: './login.component.html',
-  styleUrl: './login.component.scss',
+  templateUrl: './login.component.html',  
 })
 export class LoginPage {
   public formData: LoginDTO = {} as LoginDTO;
@@ -25,7 +24,7 @@ export class LoginPage {
 
     this.authService.login(this.formData).subscribe((token: TokenDTO) => {
       this.authService.saveToken(token);
-      this.router.navigateByUrl('/dashboard');
+      this.router.navigateByUrl('auth/dashboard');
     });
   }
 }
