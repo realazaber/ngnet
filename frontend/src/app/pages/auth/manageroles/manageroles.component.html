@@ -1,0 +1,45 @@
+<section>
+  <ngnet-container>
+    <h1>Manage Roles</h1>
+
+    @if (roles.length === 0) {
+    <span>Loading</span>
+    } @else {
+    <table>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>User Count</th>
+        <th></th>
+      </tr>
+      @for (role of roles; track $index) {
+      <tr>
+        <td>{{ role.id }}</td>
+        <td>{{ role.name }}</td>
+        <td>{{ getUserCount(role) }}</td>
+        <td>
+          @if (getUserCount(role) == 0) {
+          <button (click)="deleteRole(role.name)" class="btn primary">
+            Delete
+          </button>
+          }
+        </td>
+      </tr>
+
+      }
+    </table>
+    }
+
+    <h2>Create Role</h2>
+    <form class="flex sm:flex-row flex-col gap-y-2">
+      <input
+        [(ngModel)]="newRole"
+        name="newRole"
+        type="text"
+        placeholder="Role Name"
+        required
+      />
+      <button type="submit" (click)="createRole()">Create Role</button>
+    </form>
+  </ngnet-container>
+</section>
